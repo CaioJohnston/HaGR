@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Início - Reconhecimento de Gestos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Corpo */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #252422; /* Fundo preto */
+            color: #f4f4f4; /* Branco suave */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        /* Título */
+        h1 {
+            font-size: 2.5rem;
+            color: #eb5e28; /* Laranja vibrante */
+            margin-bottom: 10px;
+        }
+
+        /* Parágrafo */
+        p {
+            font-size: 1.6rem;
+            color: #f4f4f4;
+            max-width: 1200px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Botão */
+        button {
+            padding: 15px 30px;
+            background-color: #eb5e28; /* Laranja vibrante */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background-color: #d34f21; /* Laranja mais escuro */
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Bem-vindo ao HaGR</h1>
+    <h1>Hand Gesture Recognition</h1>
+    <p>
+        Este aplicativo permite que você identifique gestos de forma rápida e eficiente.
+        <br>Carregue uma imagem ou use sua webcam para testar a tecnologia.
+    </p>
+    <button onclick="startApplication()">Iniciar</button>
+
+    <script>
+        function startApplication() {
+            window.location.href = "/main"; // Caminho corrigido
+        }
+    </script>
+</body>
+</html>
