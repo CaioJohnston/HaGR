@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reconhecimento de Gestos</title>
+    <title>Reconhecimento de Gestos - YOLOv10</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="../static\style.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Reconhecimento de Gestos</h1>
+    <h1>Reconhecimento de Gestos - YOLOv10</h1>
 
-    <!-- Switch para alternar entre as funcionalidades -->
+    <!-- Switch para alternar entre Upload e Webcam -->
     <div class="toggle-container">
         <label class="switch">
             <input type="checkbox" id="toggleMode">
@@ -19,43 +19,27 @@
         <p id="toggleLabel">Usar Webcam</p>
     </div>
 
-    <!-- Formulário para upload de imagem -->
+    <!-- Upload de imagem -->
     <div id="uploadContainer" class="mode-container">
-        <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_image') }}">
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
             <h2>Carregar Imagem</h2>
-            <input type="file" name="file">
+            <input type="file" name="file" id="fileInput">
             <button type="submit">Enviar</button>
         </form>
     </div>
 
-    <!-- Seção para captura da webcam (somente a saída) -->
+    <!-- Streaming da webcam com YOLO rodando em tempo real -->
     <div id="webcamContainer" class="mode-container hidden">
         <h2>Usar Webcam</h2>
-        <div class="gesture-recognition">
-            <h3>Gesto Reconhecido:</h3>
-            <span id="gesture">Aguardando...</span>
-        </div>
-        <!-- Exibição da imagem processada da webcam -->
+        <img id="videoStream" src="/video_feed" alt="Webcam com YOLO"/>
+    </div>
+
+    <!-- Exibição do resultado para imagens enviadas -->
+    <div class="result-container">
         <div class="image-container">
             <h3>Imagem Processada:</h3>
             <img id="resultImage" src="" alt="Resultado">
         </div>
-    </div>
-
-    <!-- Exibição da imagem processada e gesto reconhecido (se for o caso do upload) -->
-    <div class="result-container">
-        {% if image_path and gesture %}
-            <div class="image-container">
-                <h3>Imagem Processada:</h3>
-                <img id="resultImage" src="{{ image_path }}" alt="Resultado">
-            </div>
-            <div class="gesture-recognition">
-                <h3>Gesto Reconhecido:</h3>
-                <span id="gesture">{{ gesture }}</span>
-            </div>
-        {% else %}
-            <p>Aguardando processamento...</p>
-        {% endif %}
     </div>
 
     <script>
@@ -64,83 +48,42 @@
         const uploadContainer = document.getElementById('uploadContainer');
         const webcamContainer = document.getElementById('webcamContainer');
         const resultImage = document.getElementById('resultImage');
-        const gestureElement = document.getElementById('gesture');
+        const uploadForm = document.getElementById('uploadForm');
 
-        // Função para exibir a mensagem de "Aguardando processamento..."
-        function showWaitingMessage() {
-            resultImage.src = '';  // Limpa a imagem
-            gestureElement.textContent = 'Aguardando...';  // Limpa o gesto
-            const resultContainer = document.querySelector('.result-container');
-            resultContainer.innerHTML = '<p>Aguardando processamento...</p>'; // Exibe a mensagem de espera
-        }
-
-        // Alterna entre os modos e limpa as saídas
+        // Alternar entre Upload e Webcam
         toggleMode.addEventListener('change', () => {
-            showWaitingMessage();  // Exibe a mensagem de espera
+            resultImage.src = '';
             if (toggleMode.checked) {
-                // Modo Webcam
                 toggleLabel.textContent = 'Usar Imagem';
                 uploadContainer.classList.add('hidden');
                 webcamContainer.classList.remove('hidden');
             } else {
-                // Modo Upload de Imagem
                 toggleLabel.textContent = 'Usar Webcam';
                 uploadContainer.classList.remove('hidden');
                 webcamContainer.classList.add('hidden');
             }
         });
 
-        // Lógica para capturar imagens da Webcam
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.play();
-                startPredictions(video);  // Inicia a predição em tempo real
+        // Envio de imagem pelo formulário
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+
+            fetch('/upload_image', {
+                method: 'POST',
+                body: formData
             })
-            .catch((error) => {
-                console.error('Erro ao acessar a webcam:', error);
-                alert('Não foi possível acessar a webcam. Verifique as permissões.');
-            });
-
-        // Função para capturar os frames da webcam e enviar para o servidor
-        function startPredictions(video) {
-            setInterval(() => {
-                // Captura o frame atual do vídeo
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // Converte o frame para base64
-                const imageData = canvas.toDataURL('image/jpeg');
-
-                // Envia a imagem capturada para o servidor
-                fetch('/webcam_capture', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ image: imageData }),
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    // Atualiza a imagem e o gesto reconhecido
-                    updateImagePrediction(data);
-                })
-                .catch((error) => {
-                    console.error('Erro ao enviar a imagem para o servidor:', error);
-                });
-            }, 100);  // Envia o frame a cada 100ms
-        }
-
-        // Função para exibir a predição de imagem processada
-        function updateImagePrediction(data) {
-            // Atualiza o gesto e a imagem processada
-            gestureElement.textContent = data.gesture;
-            resultImage.src = data.image_path;  // Atualiza a imagem processada
-        }
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_path) {
+                    resultImage.src = data.image_path;
+                    resultImage.style.display = 'block'; // Exibir imagem processada
+                } else {
+                    console.error('Erro ao receber a imagem processada:', data.error);
+                }
+            })
+            .catch(error => console.error('Erro ao processar imagem:', error));
+        });
     </script>
 </body>
 </html>
